@@ -102,49 +102,4 @@ observation.method = {
 }
 
 print(observation.json())
-# %%
-from fhirclient import client
-from fhirclient.models import (
-    fhirdate,
-    codeableconcept,
-    coding,
-    observation,
-    quantity,
-    reference
-)
 
-# create an instance of the FHIR client
-smart = client.FHIRClient(settings={'app_id': 'my_web_app', 'api_base': 'https://my-fhir-server.com'})
-
-# create a new observation resource
-obs = observation.Observation()
-
-# set the observation status
-obs.status = 'final'
-
-# set the observation code
-code = coding.Coding()
-code.system = 'http://loinc.org'
-code.code = '12345-6'
-code.display = 'Blood pressure'
-
-obs.code = codeableconcept.CodeableConcept()
-obs.code.coding = [code]
-
-# set the observation value
-obs.valueQuantity = quantity.Quantity()
-obs.valueQuantity.value = 120
-obs.valueQuantity.unit = 'mmHg'
-obs.valueQuantity.system = 'http://unitsofmeasure.org'
-
-# set the observation reference
-obs.subject = reference.Reference()
-obs.subject.reference = 'Patient/example'
-
-# set the observation effective time
-obs.effectiveDateTime = fhirdate.FHIRDate('2022-01-01T00:00:00.000Z')
-
-# save the observation to the FHIR server
-smart.
-
-# %%
