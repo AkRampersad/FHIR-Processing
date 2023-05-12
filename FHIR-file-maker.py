@@ -3,6 +3,10 @@ import sqlite3
 from fhir.resources.patient import Patient
 from fhir.resources.observation import Observation
 from fhir.resources.humanname import HumanName
+from fhir.resources.codeableconcept import  CodeableConcept
+from fhir.resources.coding import Coding 
+import json
+
 
 import os
 
@@ -24,18 +28,34 @@ name.use = "official"
 name.family = "Rampersad"
 name.given = ["Akash"]
 
+json_obj = {"resourceType": "Patient", 
+            "id": "p001",
+            "active" : True,
+            "name":[{"text": "Akash Rampersad"}],
+            "birthDate": "1998-05-05"
+}
+
 patient0.name = [name]
-print(patient0.name)
+pat = Patient.parse_obj(json_obj)
+
+print(isinstance(pat, Patient))
+
+#print(json.dumps(patient0))
 
 coding.system = "http://loinc.org"
 coding.code = "8480-6"
 code = CodeableConcept()
 code.coding = [coding]
 
-observation_resource = Observation(status="final",code=code)
+observation = Observation(status="final",code=code)
 
-observation_resource.effectiveDateTime = '2023-05-10'
-observation_resource.subject = "Patient"
+print(observation.code)
+
+observation.effectiveDateTime = '2023-05-10'
+
+observation.subject = [pat]
+
+
 
 for row in rows:
     component = observation.ObservationComponent()
@@ -46,60 +66,7 @@ for row in rows:
 
 
 
+
+
+
 # %%
-
-#below is the immplementation hard writing the json fields as str's 
-import sqlite3
-from fhir.resources.patient import Patient
-from fhir.resources.observation import Observation
-from fhir.resources.humanname import HumanName
-from fhir.resources.reference import Reference
-from fhir.resources.quantity import Quantity
-from fhir.resources.codeableconcept import CodeableConcept
-from fhir.resources.coding import Coding
-import os
-
-downloads_folder = os.path.expanduser("~") + "/Downloads/"
-db_file = downloads_folder + "exampleinput.sqlite"
-conn = sqlite3.connect(db_file)
-cursor = conn.cursor()
-cursor.execute('SELECT * from variant')
-rows=cursor.fetchall()
-print(rows)
-coding = Coding()
-
-coding.system = "http://loinc.org"
-coding.code = "8480-6"
-code = CodeableConcept()
-code.coding = [coding]
-
-observation = Observation(status="final", code=code)
-#observation.subject = {
-#    "subject" : {
-#       "reference" : "Akash Rampersad"
-#    }}
-observation.code = {
-    "coding": [
-        {
-            "system" : "http://loinc.org",
-            "code": "8480-6",
-            "display" : "Genetic Variant"
-        }
-    ],
-    "text": "Genetic Variant"
-}
-
-observation.method = {
-    "method" : {
-        "coding" : [
-            {
-                "system" : "http://loinc.org",
-                "code" : "LA26398-0",
-                "display" : "Sequencing"
-      }
-    ]
-  }
-}
-
-print(observation.json())
-
