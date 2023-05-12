@@ -20,6 +20,10 @@ rows=cursor.fetchall()
 print(rows)
 coding = Coding()
 
+#Write ReferenceType resource in str
+subj_obj = {"resourceType": "Reference",
+            }
+
 coding.system = "http://loinc.org"
 coding.code = "8480-6"
 code = CodeableConcept()
