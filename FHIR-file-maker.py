@@ -73,12 +73,38 @@ print(observation0.subject == subject0)
 
 
 
-#for row in rows:
-#   component = observation0.component()
-#  component.code = {'coding': [{'system': 'http://loinc.org', 'code': '48018-6', 'display': 'Genetic variant'}]}
-#   component.valueCodeableConcept = {'coding': [{'system': 'http://www.genenames.org', 'code': row[1], 'display': row[1]}]}
-#   component.valueQuantity = {'value': row[2], 'unit': '%', 'system': 'http://unitsofmeasure.org', 'code': '%'}
-#   component.interpretation = [{'coding': [{'system': 'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation', 'code': 'POS', 'display': 'positive'}]}]
+new_code = Coding()
+comps = []
+num = 0 
+for row in rows:
+   num += 1
+
+  
+   code_ref = {'coding': [{'system': 'http://loinc.org', 'code': '48018-6', 'display': 'Ref Nucleotide(s)'}]}
+   comp_ref = ObservationComponent(code=code_ref,valueString= row[4])
+
+   comps.append(comp_ref)
+
+   code_alt = {'coding': [{'system': 'http://loinc.org', 'code': '48018-6', 'display': 'Alt Nucleotide(s)'}]}
+   comp_alt = ObservationComponent(code=code_alt, valueString= row[5])
+
+   comps.append(comp_alt)
+
+
+
+   #component.valueString = row[4]
+   #component.valueQuantity = {'value': row[2], 'unit': '%', 'system': 'http://unitsofmeasure.org', 'code': '%'}
+   #component.interpretation = [{'coding': [{'system': 'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation', 'code': 'POS', 'display': 'positive'}]}]
+   
+
+
+
+
+observation0.component = comps
+
+
+
+print(observation0)
 
 
 
