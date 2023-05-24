@@ -7,11 +7,11 @@ from fhir.resources.humanname import HumanName
 from fhir.resources.codeableconcept import  CodeableConcept
 from fhir.resources.coding import Coding 
 from fhir.resources.reference import Reference
-import json
-
-
+from fhir.resources.bundle import Bundle
 import os
 
+
+#get file from PATH
 downloads_folder = os.path.expanduser("~") + "/Downloads/"
 db_file = downloads_folder + "exampleinput.sqlite"
 conn = sqlite3.connect(db_file)
@@ -19,96 +19,92 @@ cursor = conn.cursor()
 cursor.execute('SELECT * from variant')
 rows=cursor.fetchall()
 
-coding = Coding()
-
-
+#create an instance of a BUNDLE resource 
+bundle = Bundle(type="batch")
 
 #create a blank ReferenceType
 subj = Reference()
 #Assign reference variable as "Patient" for the Observation subject 
 subj.reference = "Patient"
-
-print(subj)
-print(isinstance (subj, Reference))
-
 subject0 = subj
-#create patient
+
+#create patientType
 patient0 = Patient()
+#create nameType
 name = HumanName()
-
-
 name.use = "official"
 name.family = "Rampersad"
 name.given = ["Akash"]
-
 json_obj = {"resourceType": "Patient", 
             "id": "p001",
             "active" : True,
             "name":[{"text": "Akash Rampersad"}],
             "birthDate": "1998-05-05"
 }
-
 patient0.name = [name]
 
-
+#Fill in patientType 
 pat = Patient.parse_obj(json_obj)
 
 
-print(isinstance(pat.name,dict))
-print(isinstance(json_obj, dict))
-
-coding.system = "http://loinc.org"
-coding.code = "8480-6"
-code = CodeableConcept()
-code.coding = [coding]
-
-observation0 = Observation(status="final",code=code,subject=subj)
+#Save loinc url for ease of access
+loinc = "http://loinc.org"
 
 
-print(observation0.code)
+obs_list = []
 
-observation0.effectiveDateTime = '2023-05-10'
-
-print(observation0.subject == subject0)
-
-
-
-new_code = Coding()
-comps = []
-num = 0 
 for row in rows:
-   num += 1
+   #create codingType for row Observation
+   coding = Coding()
+   coding.system = loinc
+   coding.code = "8480-6"
+   code = CodeableConcept()
+   code.coding = [coding]
 
-  
-   code_ref = {'coding': [{'system': 'http://loinc.org', 'code': '48018-6', 'display': 'Ref Nucleotide(s)'}]}
-   comp_ref = ObservationComponent(code=code_ref,valueString= row[4])
+   #Get Alleles from sqlite file  
+   ref = row[4]
+   alt = row[5]
 
-   comps.append(comp_ref)
+   #create Observation Resource for row  
+   obs_row = Observation(status="final", code=code, subject=subj)
 
-   code_alt = {'coding': [{'system': 'http://loinc.org', 'code': '48018-6', 'display': 'Alt Nucleotide(s)'}]}
-   comp_alt = ObservationComponent(code=code_alt, valueString= row[5])
+   #Make Componenet for reference allele 
+   coding_ref = Coding()
+   coding_ref.system = loinc
+   coding_ref.code = "69547-8" #always code for reference allele
+   code_ref = CodeableConcept()
+   code_ref.coding = [coding_ref]
+   comp_ref = ObservationComponent(code=code_ref)
+   comp_ref.valueString = alt
 
-   comps.append(comp_alt)
+   #Make Componenet for (alt)ernate allele
+   coding_alt = Coding()
+   coding_alt.system = loinc
+   coding_alt.code = "69551-0"
+   code_alt = CodeableConcept()
+   code_alt.coding = [coding_alt]
+   comp_alt = ObservationComponent(code=code_alt)
+   comp_alt.valueString = alt
 
+   #add componenets to row observation
+   obs_row.component = [comp_ref, comp_alt]
 
+   #add row observation to list of observations 
+   obs_list.append(obs_row)
 
-   #component.valueString = row[4]
-   #component.valueQuantity = {'value': row[2], 'unit': '%', 'system': 'http://unitsofmeasure.org', 'code': '%'}
-   #component.interpretation = [{'coding': [{'system': 'http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation', 'code': 'POS', 'display': 'positive'}]}]
-   
+entry = []
+print(len(obs_list) == len(rows))
 
+for ind_obs in obs_list:
+   entry.append({"resource": ind_obs})
 
+bundle.entry = entry
+json_str = bundle.json()
 
+print(json_str)
 
-observation0.component = comps
+file_path = "output.json"
 
-
-
-print(observation0)
-
-
-
-
-
-
+with open("output.json", "w") as file:
+   file.write(json_str)
 # %%
